@@ -904,6 +904,7 @@ ssc.run <- function(obj, assay.name="exprs",
       }
       de.out <- findDEGenesByAOV(xdata = assay(obj,assay.name),
                                  xlabel = .xlabel,
+                                 n.cores = ncore,
                                  gid.mapping = rowData(obj)[,"display.name"])
       metadata(obj)$ssc[["de.res"]][["L1C1"]] <- de.out
       metadata(obj)$ssc[["variable.gene"]][["de"]] <- head(de.out$aov.out.sig$geneID,n=sd.n)

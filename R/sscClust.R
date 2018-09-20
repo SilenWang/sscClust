@@ -53,6 +53,10 @@ ssc.build <- function(x,display.name=NULL)
       f.na <- is.na(display.name)
       display.name[f.na] <- row.names(obj)[f.na]
       rowData(obj)[,"display.name"] <- display.name
+      # add row.names here to ensure gsymnol mapping
+      tmp <- rowData(obj)[,"display.name"]
+      tmp <- as.data.frame(tmp)
+      rowData(obj) <- DataFrame(tmp, row.names = row.names(obj))
     }else{
       rowData(obj)[,"display.name"] <- row.names(obj)
     }

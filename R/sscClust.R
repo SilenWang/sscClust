@@ -52,11 +52,8 @@ ssc.build <- function(x,display.name=NULL)
     if(!is.null(display.name)){
       f.na <- is.na(display.name)
       display.name[f.na] <- row.names(obj)[f.na]
-      rowData(obj)[,"display.name"] <- display.name
-      # add row.names here to ensure gsymnol mapping
-      tmp <- rowData(obj)[,"display.name"]
-      tmp <- as.data.frame(tmp)
-      rowData(obj) <- DataFrame(tmp, row.names = row.names(obj))
+      rowData(obj)[,'gid'] <- row.names(obj)
+      rowData(obj)[,'display.name'] <- display.name
     }else{
       rowData(obj)[,"display.name"] <- row.names(obj)
     }
@@ -830,7 +827,8 @@ ssc.run <- function(obj, assay.name="exprs",
           de.out <- findDEGenesByAOV(xdata = assay(obj,assay.name),
                                      xlabel = colData(obj)[,.xlabel],
                                      n.cores = ncore,
-                                     gid.mapping = rowData(obj)[,"display.name"])
+                                     # make sure that gid shuold be colunm 1
+                                     gid.mapping = rowData(obj)[,c("gid", "display.name")])
           if(!is.null(de.out) && nrow(de.out$aov.out.sig)>30){
             metadata(obj)$ssc[["de.res"]][[rid]] <- de.out
             metadata(obj)$ssc[["variable.gene"]][["refine.de"]] <- head(de.out$aov.out.sig$geneID,n=de.n)
@@ -910,7 +908,8 @@ ssc.run <- function(obj, assay.name="exprs",
                                  xlabel = .xlabel,
                                  n.cores = ncore,
                                  out.prefix = out.prefix,
-                                 gid.mapping = rowData(obj)[,"display.name"])
+                                 # make sure that gid shuold be colunm 1
+                                 gid.mapping = rowData(obj)[,c("gid", "display.name")])
       metadata(obj)$ssc[["de.res"]][["L1C1"]] <- de.out
       metadata(obj)$ssc[["variable.gene"]][["de"]] <- head(de.out$aov.out.sig$geneID,n=sd.n)
       ### for general visualization

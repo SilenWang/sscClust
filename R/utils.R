@@ -185,7 +185,8 @@ findDEGenesByAOV <- function(xdata,xlabel,out.prefix=NULL,mod=NULL,
   #print(str(ret))
 
   if(!is.null(gid.mapping)){
-    cnames <- gid.mapping[rownames(xdata)]
+    gid.mapping <- data.frame(gid.mapping, stringsAsFactors = F, row.names = 1)
+    cnames <- gid.mapping[rownames(xdata), ]
   }else{
     cnames <- rownames(xdata)
   }

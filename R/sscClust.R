@@ -680,6 +680,7 @@ ssc.clustSubsamplingClassification <- function(obj, assay.name="exprs",
 }
 
 #' Wrapper for running all the pipeline
+#' @importFrom rjson fromJSON
 #' @param obj object of \code{singleCellExperiment} class
 #' @param assay.name character; which assay (default: "exprs")
 #' @param method.vgene character; variable gene identification method used. (default: "sd")
@@ -710,6 +711,8 @@ ssc.clustSubsamplingClassification <- function(obj, assay.name="exprs",
 #' @param out.prefix character; output prefix, if not NULL, some plots of intermediate result will be produced. (default: NULL)
 #' @param parfile character; parameter files, if not NULL, will use the settings. must contain a list named
 #' `parlist`. (default: NULL)
+#' @param par list; parameter object, only accept list, if parfile and par were set at the same time, content of parfile
+#' will overwrite par. (default: NULL)
 #' @param ncore integer; nuber of CPU cores to use. if NULL, automatically detect the number. (default: NULL)
 #' @param reuse logical; don't calculate if the query is already available. (default: F)
 #' @param seed integer; seed of random number generation. (default: NULL)
@@ -743,12 +746,13 @@ ssc.run <- function(obj, assay.name="exprs",
                     nIter=1,
                     out.prefix=NULL,
                     parfile=NULL,
+                    parlist=NULL,
                     reuse=F,
                     ncore=NULL,
                     seed=NULL,
                     do.DE=F,...)
 {
-  ### some checking
+  ### some checkin
   if(is.null(colnames(obj))){
     stop("colnames of obj is NULL!!!")
   }
@@ -759,11 +763,12 @@ ssc.run <- function(obj, assay.name="exprs",
   #obj <- ssc.variableGene(obj,method=method.vgene,sd.n=sd.n,assay.name=assay.name)
   if(!subsampling){
     if(!is.null(parfile) && file.exists(parfile)){
-      source(parfile)
+      parlist <- fromJSON(file = parfile)
       cat(sprintf("parfile: %s\n",parfile))
       print(parlist)
-    }else{
-      parlist <- NULL
+    }
+    if (!is.null(parlist)) && !is.list(parlist){
+      stop("parlist only take in list!")
     }
     runOneIter <- function(obj,rid,k.batch,level=1){
       if(!is.null(parlist) && rid %in% names(parlist)){

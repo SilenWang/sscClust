@@ -733,6 +733,7 @@ ssc.run <- function(obj, assay.name="exprs",
                     method.clust="kmeans",
                     method.classify="knn",
                     pca.npc=NULL,
+                    tSNE.perplexity=30,
                     iCor.niter=1,
                     iCor.method="spearman",
                     zinbwave.K=20, zinbwave.X="~patient",
@@ -791,6 +792,7 @@ ssc.run <- function(obj, assay.name="exprs",
                            iCor.method = iCor.method,
                            zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
                            method.vgene=method.vgene,
+                           tSNE.perplexity = tSNE.perplexity,
                            ncore = ncore,
                            seed = seed,
                            reuse = reuse)
@@ -844,6 +846,7 @@ ssc.run <- function(obj, assay.name="exprs",
                          iCor.niter = iCor.niter,
                          iCor.method = iCor.method,
                          zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
+                         tSNE.perplexity = tSNE.perplexity,
                          ncore = ncore,
                          seed = seed,
                          dim.name = sprintf("de.%s",method.reduction),
@@ -919,7 +922,7 @@ ssc.run <- function(obj, assay.name="exprs",
       metadata(obj)$ssc[["variable.gene"]][["de"]] <- head(de.out$aov.out.sig$geneID,n=sd.n)
       ### for general visualization
       obj <- ssc.reduceDim(obj,assay.name=assay.name, method="tsne",
-                           zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
+                           zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,tSNE.perplexity=tSNE.perplexity,
                            method.vgene="de",dim.name = sprintf("vis.tsne"))
     }
   }else{

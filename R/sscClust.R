@@ -232,6 +232,7 @@ ssc.reduceDim <- function(obj,assay.name="exprs",
                           pca.npc=NULL,
                           tSNE.usePCA=T,
                           tSNE.perplexity=30,
+                          check_duplicates=T,
                           zinbwave.K=20, zinbwave.X="~patient",
                           autoTSNE=T,
                           dim.name=NULL,
@@ -281,9 +282,9 @@ ssc.reduceDim <- function(obj,assay.name="exprs",
         ### save to object
         metadata(obj)$ssc$pca.res <- pca.res
         proj_data <- pca.res$x[,1:pca.npc,drop=F]
-        if(autoTSNE){ reducedDim(obj,sprintf("%s.tsne",dim.name)) <- run.tSNE(proj_data,tSNE.usePCA=F,tSNE.perplexity) }
+        if(autoTSNE){ reducedDim(obj,sprintf("%s.tsne",dim.name)) <- run.tSNE(proj_data,tSNE.usePCA=F,tSNE.perplexity,check_duplicates=check_duplicates) }
     }else if(method=="tsne"){
-      proj_data <- run.tSNE(BiocGenerics::t(assay(obj[vgene,],assay.name)),tSNE.usePCA,tSNE.perplexity)
+      proj_data <- run.tSNE(BiocGenerics::t(assay(obj[vgene,],assay.name)),tSNE.usePCA,tSNE.perplexity, check_duplicates=check_duplicates)
     }else if(method=="iCor"){
       proj_data <- as.matrix(assay(obj[vgene,],assay.name))
       while(iCor.niter>0){
@@ -291,13 +292,13 @@ ssc.reduceDim <- function(obj,assay.name="exprs",
         proj_data <- cor.BLAS(t(proj_data),method=iCor.method,nthreads = ncore)
         iCor.niter <- iCor.niter-1
       }
-      if(autoTSNE) { reducedDim(obj,sprintf("%s.tsne",dim.name)) <- run.tSNE(proj_data,tSNE.usePCA=F,tSNE.perplexity) }
+      if(autoTSNE) { reducedDim(obj,sprintf("%s.tsne",dim.name)) <- run.tSNE(proj_data,tSNE.usePCA=F,tSNE.perplexity, check_duplicates=check_duplicates) }
     }else if(method=="zinbwave"){
       res.zinb <- run.zinbWave(obj,assay.name=assay.name,vgene=vgene,n.cores=ncore,
                                zinbwave.K=zinbwave.K, zinbwave.X=zinbwave.X,verbose=F)
       proj_data <- getW(res.zinb)
       colnames(proj_data) <- sprintf("W%d",seq_len(ncol(proj_data)))
-      if(autoTSNE) { reducedDim(obj,sprintf("%s.tsne",dim.name)) <- run.tSNE(proj_data,tSNE.usePCA=F,tSNE.perplexity) }
+      if(autoTSNE) { reducedDim(obj,sprintf("%s.tsne",dim.name)) <- run.tSNE(proj_data,tSNE.usePCA=F,tSNE.perplexity, check_duplicates=check_duplicates) }
     }
     reducedDim(obj,dim.name) <- proj_data
   }
@@ -347,7 +348,8 @@ ssc.clust <- function(obj, assay.name="exprs", method.reduction="iCor",
                       SC3.biology=T,SC3.markerplot.width=15,
                       dpclust.rho=NULL,dpclust.delta=NULL,
                       parlist=NULL,
-                      out.prefix=NULL,seed=NULL,ncore=NULL)
+                      out.prefix=NULL,seed=NULL,ncore=NULL,
+                      check_duplicates=T)
 {
   clust.res <- NULL
   res.list <- list()
@@ -484,7 +486,7 @@ ssc.clust <- function(obj, assay.name="exprs", method.reduction="iCor",
     metadata(obj)$sc3 <- metadata(obj.tmp)$sc3
     for(.dname in names(metadata(obj)$sc3$transformations)){
       reducedDim(obj,sprintf("sc3.%s",.dname)) <- metadata(obj)$sc3$transformations[[.dname]]
-      reducedDim(obj,sprintf("sc3.%s.tsne",.dname)) <- run.tSNE(reducedDim(obj,sprintf("sc3.%s",.dname)),tSNE.usePCA=F,30)
+      reducedDim(obj,sprintf("sc3.%s.tsne",.dname)) <- run.tSNE(reducedDim(obj,sprintf("sc3.%s",.dname)),tSNE.usePCA=F,30,check_duplicates=check_duplicates)
     }
     res.list[["sc3.biology"]] <- rowData(obj.tmp)[,grepl("^(sc3_|display.name|feature_symbol)",names(rowData(obj.tmp)),perl = T),drop=F]
   }else{
@@ -733,6 +735,8 @@ ssc.run <- function(obj, assay.name="exprs",
                     method.clust="kmeans",
                     method.classify="knn",
                     pca.npc=NULL,
+                    tSNE.perplexity=30,
+                    check_duplicates=T,
                     iCor.niter=1,
                     iCor.method="spearman",
                     zinbwave.K=20, zinbwave.X="~patient",
@@ -787,6 +791,8 @@ ssc.run <- function(obj, assay.name="exprs",
       obj <- ssc.reduceDim(obj,assay.name=assay.name,
                            method=method.reduction,
                            pca.npc = pca.npc,
+                           tSNE.perplexity=tSNE.perplexity,
+                           check_duplicates=check_duplicates,
                            iCor.niter = iCor.niter,
                            iCor.method = iCor.method,
                            zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
@@ -800,7 +806,7 @@ ssc.run <- function(obj, assay.name="exprs",
                        method=method.clust, k.batch=k.batch,
                        out.prefix = if(is.null(out.prefix)) NULL else sprintf("%s.%s",out.prefix,rid),
                        seed = seed,
-                       method.vgene=method.vgene, parlist = parlist.rid, ...)
+                       method.vgene=method.vgene, parlist = parlist.rid, check_duplicates=check_duplicates,...)
 
       .xlabel <- NULL
       if(method.clust %in% c("adpclust","dpclust")){
@@ -841,6 +847,8 @@ ssc.run <- function(obj, assay.name="exprs",
             obj <- ssc.reduceDim(obj,assay.name=assay.name,
                          method=method.reduction,
                          pca.npc = pca.npc,
+                         tSNE.perplexity=tSNE.perplexity,
+                         check_duplicates=check_duplicates,
                          iCor.niter = iCor.niter,
                          iCor.method = iCor.method,
                          zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
@@ -919,6 +927,8 @@ ssc.run <- function(obj, assay.name="exprs",
       metadata(obj)$ssc[["variable.gene"]][["de"]] <- head(de.out$aov.out.sig$geneID,n=sd.n)
       ### for general visualization
       obj <- ssc.reduceDim(obj,assay.name=assay.name, method="tsne",
+                            tSNE.perplexity=tSNE.perplexity,
+                            check_duplicates=check_duplicates,
                            zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
                            method.vgene="de",dim.name = sprintf("vis.tsne"))
     }

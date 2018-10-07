@@ -314,16 +314,16 @@ run.KNN <- function(xdata,xlabel,ydata,k=1)
 #' @param tSNE.usePCA whether perform PCA before tSNE (default: T)
 #' @param tSNE.perplexity perplexity parameter of tSNE (default: 30)
 #' @return If successful same as the return value of Rtsne(); otherwise NULL
-run.tSNE <- function(idata,tSNE.usePCA=T,tSNE.perplexity=30){
+run.tSNE <- function(idata,tSNE.usePCA=T,tSNE.perplexity=30, check_duplicates = T){
   ret <- NULL
   tryCatch({
-    ret <- Rtsne::Rtsne(idata, pca = tSNE.usePCA, perplexity = tSNE.perplexity)$Y
+    ret <- Rtsne::Rtsne(idata, pca = tSNE.usePCA, perplexity = tSNE.perplexity, check_duplicates = check_duplicates)$Y
   },error=function(e){
     #cat("Perplexity is too large; try to use smaller perplexity 5\n")
   })
   if(is.null(ret)){
     tryCatch({
-      ret <- Rtsne::Rtsne(idata, pca = tSNE.usePCA, perplexity = 5)$Y
+      ret <- Rtsne::Rtsne(idata, pca = tSNE.usePCA, perplexity = 5, check_duplicates = check_duplicates)$Y
     },error=function(e){ print("Error occur when using perplexity 5"); print(e); e })
   }
   return(ret)

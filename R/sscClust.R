@@ -682,7 +682,7 @@ ssc.clustSubsamplingClassification <- function(obj, assay.name="exprs",
 }
 
 #' Wrapper for running all the pipeline
-#' @importFrom rjson fromJSON
+#' @importFrom rjson
 #' @param obj object of \code{singleCellExperiment} class
 #' @param assay.name character; which assay (default: "exprs")
 #' @param method.vgene character; variable gene identification method used. (default: "sd")
@@ -697,11 +697,13 @@ ssc.clustSubsamplingClassification <- function(obj, assay.name="exprs",
 #' @param method.clust character; clustering method to be used, should be one of "kmeans", "hclust", "SNN", "adpclust" and "SC3. (default: "kmeans")
 #' @param method.classify character; method used for classification, one of "knn" and "RF". (default: "knn")
 #' @param pca.npc integer; number of pc be used. Only for reduction method "pca". (default: NULL)
+#' @param tSNE.perplexity integer; perplexity used in Rtsne packages. (default: 30)
+#' @param check_duplicates logical; whether to check duplication before process t-SNE in Rtsne packages. (default: 30)
 #' @param iCor.niter integer; number of iteration of calculating the correlation. Used in reduction method "iCor". (default: 1)
 #' @param iCor.method character; correlation method, one of "spearman", "pearson" (default: "spearman")
 #' @param zinbwave.K integer, zinbwave parameter, number of latent variables. (default: 20)
 #' @param zinbwave.X character, zinbwave parameter, cell-level covariates. (default: "~patient")
-#' @param subsampling logical; whether cluster using the subsampling->cluster->classification method. (default: F)
+#' @param subsampling logical; whether cluster using the subsampling->cluster->classification method. (default: FF)
 #' @param sub.frac numeric; subsample to frac of original samples. (default: 0.4)
 #' @param sub.use.proj logical; whether use the projected data for classification. (default: T)
 #' @param sub.vis.proj logical; whether get low dimensional representation for visualization, only used in downsample mode. (default: F)
@@ -736,10 +738,7 @@ ssc.run <- function(obj, assay.name="exprs",
                     method.classify="knn",
                     pca.npc=NULL,
                     tSNE.perplexity=30,
-<<<<<<< HEAD
-=======
                     check_duplicates=T,
->>>>>>> b636826c76412ab6737ff31d2a62ac996316c2f1
                     iCor.niter=1,
                     iCor.method="spearman",
                     zinbwave.K=20, zinbwave.X="~patient",
@@ -770,6 +769,8 @@ ssc.run <- function(obj, assay.name="exprs",
   #obj <- ssc.variableGene(obj,method=method.vgene,sd.n=sd.n,assay.name=assay.name)
   if(!subsampling){
     if(!is.null(parfile) && file.exists(parfile)){
+      # mod parfile to json format
+      # source(parfile)
       parlist <- fromJSON(file = parfile)
       cat(sprintf("parfile: %s\n",parfile))
       print(parlist)
@@ -932,13 +933,9 @@ ssc.run <- function(obj, assay.name="exprs",
       metadata(obj)$ssc[["variable.gene"]][["de"]] <- head(de.out$aov.out.sig$geneID,n=sd.n)
       ### for general visualization
       obj <- ssc.reduceDim(obj,assay.name=assay.name, method="tsne",
-<<<<<<< HEAD
-                           zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,tSNE.perplexity=tSNE.perplexity,
-=======
                             tSNE.perplexity=tSNE.perplexity,
                             check_duplicates=check_duplicates,
                            zinbwave.K = zinbwave.K, zinbwave.X = zinbwave.X,
->>>>>>> b636826c76412ab6737ff31d2a62ac996316c2f1
                            method.vgene="de",dim.name = sprintf("vis.tsne"))
     }
   }else{
@@ -1033,7 +1030,7 @@ ssc.plot.tsne <- function(obj, assay.name="exprs", gene=NULL, columns=NULL, plot
                              ncol = if(length(columns)>1) 2 else 1,
                              base_aspect_ratio=base_aspect_ratio)
         }else{
-          print(pp)
+          return(pp)
         }
       }else{
         warning(sprintf("invalidate parameter: colSet. Please check that!"))
@@ -1054,7 +1051,7 @@ ssc.plot.tsne <- function(obj, assay.name="exprs", gene=NULL, columns=NULL, plot
     p <- ggGeneOnTSNE(assay(obj,assay.name),
                      dat.map,
                      gene,out.prefix,p.ncol=p.ncol,xlim=xlim,ylim=ylim,size=size,width=width,height=height)
-    if(is.null(out.prefix)){ print(p) }
+    if(is.null(out.prefix)){ return(p) }
   }
   if(plotDensity){
     if(is.null(out.prefix)){

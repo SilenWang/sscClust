@@ -682,7 +682,7 @@ ssc.clustSubsamplingClassification <- function(obj, assay.name="exprs",
 }
 
 #' Wrapper for running all the pipeline
-#' @importFrom rjson
+#' @importFrom rjson fromJSON
 #' @param obj object of \code{singleCellExperiment} class
 #' @param assay.name character; which assay (default: "exprs")
 #' @param method.vgene character; variable gene identification method used. (default: "sd")
